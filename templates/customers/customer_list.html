@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - FinRetain AI{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 style="margin: 0; font-size: 1.4rem; color: #2c3e50;">Customers</h2>
+        <a href="{% url 'customers:customer_create' %}" class="btn btn-primary">+ Add Customer</a>
+    </div>
+
+    <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+            <thead>
+                <tr style="background: #f8f9fa; text-align: left; border-bottom: 2px solid #e9ecef;">
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">ID</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Name</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Tenure</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Balance</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Latest Risk</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Probability</th>
+                    <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                    <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.1s;" onmouseover="this.style.backgroundColor='#fcfcfc'" onmouseout="this.style.backgroundColor='transparent'">
+                        <td style="padding: 12px 20px; color: #868e96; font-family: monospace; font-size: 0.9rem;">{{ customer.customer_id }}</td>
+                        <td style="padding: 12px 20px;">
+                            <div style="font-weight: 500; color: #343a40;">{{ customer.name }}</div>
+                            <div style="font-size: 0.85rem; color: #868e96;">{{ customer.email }}</div>
+                        </td>
+                        <td style="padding: 12px 20px; color: #495057; font-size: 0.9rem;">{{ customer.tenure }} mo</td>
+                        <td style="padding: 12px 20px; color: #495057; font-size: 0.9rem;">${{ customer.balance }}</td>
+                        
+                        {% with latest=customer.latest_predictions|first %}
+                            {% if latest %}
+                                <td style="padding: 12px 20px;">
+                                    <span class="badge badge-{{ latest.risk_level|lower }}">{{ latest.risk_level }}</span>
+                                </td>
+                                <td style="padding: 12px 20px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="flex: 1; height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; max-width: 60px;">
+                                            <div style="height: 100%; background: {% if latest.risk_level == 'HIGH' %}#dc3545{% elif latest.risk_level == 'MEDIUM' %}#f59f00{% else %}#28a745{% endif %}; width: {% widthratio latest.churn_probability 1 100 %}%;"></div>
+                                        </div>
+                                        <span style="font-size: 0.9rem; font-weight: 500; color: #495057;">{% widthratio latest.churn_probability 1 100 %}%</span>
+                                    </div>
+                                </td>
+                            {% else %}
+                                <td style="padding: 12px 20px; color: #adb5bd; font-style: italic; font-size: 0.9rem;">None</td>
+                                <td style="padding: 12px 20px; color: #adb5bd; font-style: italic; font-size: 0.9rem;">None</td>
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <td style="padding: 12px 20px;">
+                            <a href="{% url 'customers:customer_detail' customer.pk %}" style="color: #3498db; text-decoration: none; font-size: 0.9rem; font-weight: 500; margin-right: 10px;">View</a>
+                            <a href="{% url 'customers:customer_update' customer.pk %}" style="color: #6c757d; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Edit</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="padding: 30px; text-align: center; color: #6c757d;">No customers found. <a href="{% url 'customers:customer_create' %}" style="color: #3498db; text-decoration: none;">Create one</a>.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

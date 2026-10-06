@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Customer - FinRetain AI{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-top: 4px solid #dc3545;">
+    <h2 style="margin-top: 0; color: #dc3545; font-weight: 600;">Delete Customer</h2>
+    
+    <div style="margin-top: 20px;">
+        <p style="font-size: 1.1em; color: #212529;">Are you sure you want to delete the customer <strong>{{ customer.name }}</strong> ({{ customer.customer_id }})?</p>
+        <p style="color: #6c757d;">This action cannot be undone and will delete all associated prediction history.</p>
+        
+        <form method="post" style="margin-top: 25px; display: flex; gap: 15px;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete Customer</button>
+            <a href="{% url 'customers:customer_detail' customer.pk %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

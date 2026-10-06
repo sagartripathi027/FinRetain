@@ -1,583 +1,145 @@
-# 💳 FinRetain AI
+# 💳 FinRetain AI (MVP)
 
-### Reinforcement Learning for Intelligent FinTech Customer Retention
+**Notice:** This project is an ML pipeline demonstration and internship portfolio MVP. It operates entirely on **synthetic/demo data** and is not a production-grade banking platform.
 
-> **Predicting churn tells us who may leave. FinRetain AI focuses on what to do next.**
+## Project Overview
+FinRetain AI is a Django-based web application that predicts customer churn using a Machine Learning pipeline. It provides a clean dashboard to manage customers, run churn predictions, and view automated rule-based retention recommendations based on the prediction risk level.
 
-FinRetain AI is an AI-driven customer retention system designed for FinTech platforms.
+## Features
+- **User Authentication:** Secure signup, login, and logout.
+- **Customer Management:** Full CRUD operations for customer profiles.
+- **Churn Prediction:** Integration with a pre-trained scikit-learn ML pipeline to calculate churn probability.
+- **Risk Classification:** Automatic assignment of LOW, MEDIUM, or HIGH risk.
+- **Retention Recommendations:** Rule-based suggestions tailored to the customer's specific attributes and risk level.
+- **Dashboard:** High-level metrics tracking total customers, risk distributions, and recent predictions.
+- **Prediction History:** Persistent tracking of all historical predictions made for a customer.
 
-Instead of building a traditional churn prediction model that only answers:
+## Tech Stack
+- **Backend:** Django, Python
+- **Machine Learning:** scikit-learn, Pandas, NumPy, Joblib (Logistic Regression Pipeline)
+- **Database:** PostgreSQL (Production/Docker), SQLite (Local fallback)
+- **Frontend:** HTML, CSS, Django Templates
+- **Deployment:** Docker, Gunicorn
 
-> **"Which customers are likely to leave?"**
-
-FinRetain AI goes one step further:
-
-> **"Given a customer's current behavior, what action should the system take to maximize the probability of retaining them?"**
-
-The system combines **Churn Risk Analysis, Reinforcement Learning, and Retrieval-Augmented Generation (RAG)** inside a simulated FinTech environment.
-
----
-
-## 🚀 Why This Project?
-
-Customer churn is not just a prediction problem.
-
-A FinTech platform may know that a customer is becoming inactive, but the difficult question is:
-
-**What should the platform do next?**
-
-For example:
-
-* Should it do nothing?
-* Send a reminder?
-* Offer customer support?
-* Provide a reward?
-* Give a personalized retention offer?
-
-Sending an incentive to every customer is expensive and may be unnecessary.
-
-FinRetain AI treats customer retention as a **sequential decision-making problem**.
-
-The RL agent learns which intervention works better for different customer states by interacting with a simulated environment and receiving rewards based on customer outcomes.
-
----
-
-# 🧠 Core Idea
-
+## Architecture
 ```text
-                FINTECH CUSTOMER
-                       │
-                       ▼
-              Behavioral Signals
-                       │
-                       ▼
-                Churn Risk
-                       │
-                       ▼
-                Customer State
-                       │
-                       ▼
-              ┌─────────────────┐
-              │   RL AGENT      │
-              │                 │
-              │ Learns which    │
-              │ action to take  │
-              └────────┬────────┘
-                       │
-                       ▼
-                 Recommended
-                    Action
-                       │
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-       Support      Reward      Reminder
-                       │
-                       ▼
-              Simulated Customer
-                   Response
-                       │
-                       ▼
-                    Reward
-                       │
-                       ▼
-                Agent Learning
+User 
+  ↓
+Django Frontend (HTML/CSS)
+  ↓
+Django Backend (Authentication & Business Logic)
+  ↓
+predictions/services.py
+  ↓
+ml/models/churn_pipeline.joblib (Inference)
+  ↓
+PostgreSQL Database (Persistence)
 ```
 
-The agent continuously learns from the consequences of its actions.
+## ML Approach
+The current machine learning system is built upon a **synthetic/demo customer churn dataset**.
+1. **Preprocessing:** Standard scaling and feature mapping.
+2. **Model Evaluation:** Logistic Regression and Random Forest were evaluated.
+3. **Selected Model:** **Logistic Regression** was chosen for its strong recall, explainability, and simplicity, making it ideal for this MVP.
+4. **Integration:** The trained model is serialized using Joblib and loaded into memory by the Django backend for real-time inference without retraining.
 
----
-
-# 🤖 What Makes It Different?
-
-Traditional churn systems:
-
-```text
-Customer Data
-     ↓
-ML Model
-     ↓
-Churn Probability
-```
-
-FinRetain AI:
-
-```text
-Customer Data
-     ↓
-Churn Risk
-     ↓
-Customer State
-     ↓
-RL Agent
-     ↓
-Best Retention Action
-     ↓
-Customer Response
-     ↓
-Reward
-     ↓
-Learning
-```
-
-The project therefore focuses on **decision intelligence**, not just prediction.
-
----
-
-# 🎯 Problem Statement
-
-FinTech platforms have large amounts of behavioral data such as:
-
-* Transaction frequency
-* Transaction amount
-* Login activity
-* Failed transactions
-* Support interactions
-* Account age
-* Product usage
-* Payment behavior
-
-These signals can indicate that a customer is becoming inactive.
-
-However, different customers may require different interventions.
-
-FinRetain AI aims to learn:
-
-> **Which action is most suitable for a particular customer state while considering the long-term retention outcome.**
-
----
-
-# 🧩 Main Components
-
-## 1. Customer Behavior & Churn Risk
-
-The system analyzes customer behavior and estimates the customer's current churn risk.
+## Data Scalability
+The current project supports multiple CSV inputs through an automated ingestion layer, rather than hardcoding a single filename.
 
 Example:
-
 ```text
-Customer: C1024
-
-Transaction Frequency: ↓
-Login Activity: ↓
-Failed Transactions: ↑
-Support Requests: ↑
-
-Churn Risk: HIGH
+ml/data/raw/
+├── customer_001.csv
+├── customer_002.csv
+└── customer_003.csv
 ```
 
-The churn signal becomes part of the RL environment's state.
-
----
-
-## 2. Reinforcement Learning Agent
-
-The RL agent is the core intelligence of FinRetain AI.
-
-### State
-
-A customer state can contain:
-
+Data Flow:
 ```text
-tenure
-transaction_frequency
-transaction_value
-login_frequency
-failed_transactions
-support_interactions
-product_usage
-churn_risk
+Multiple CSV files
+        ↓
+Ingestion (discovery & merging)
+        ↓
+Validation (schema & constraints)
+        ↓
+Unified dataset
+        ↓
+ML pipeline
+```
+*Note: The current implementation is designed for moderate-scale CSV data using Pandas. If the dataset eventually becomes too large for local storage or memory, the ingestion/storage layer can later be replaced with Parquet, Polars/DuckDB, object storage, or Apache Spark without redesigning the core Django prediction layer.*
+
+## Database
+The application is configured to use **PostgreSQL** in production (via `DATABASE_URL` environment variable) and seamlessly falls back to **SQLite** for zero-configuration local development.
+
+## Project Structure
+```text
+FinRetain/
+├── config/             # Django settings and root routing
+├── customers/          # Customer CRUD and Dashboard views
+├── predictions/        # ML inference services and prediction tracking
+├── ml/                 # ML training scripts and serialized model artifacts
+├── templates/          # HTML Templates (Base, Dashboard, Auth, etc.)
+├── static/             # Static assets (if any)
+├── Dockerfile          # Production Docker configuration
+├── docker-compose.yml  # Local testing with PostgreSQL
+└── requirements.txt    # Python dependencies
 ```
 
-### Actions
-
-The agent can choose from actions such as:
-
-```text
-NO_ACTION
-SEND_REMINDER
-PROVIDE_SUPPORT
-OFFER_REWARD
-PERSONALIZED_OFFER
+## Environment Variables
+Create a `.env` file in the project root:
+```env
+SECRET_KEY=your-secure-secret-key
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=postgres://user:pass@host:5432/dbname
+CSRF_TRUSTED_ORIGINS=https://your-deployment-url.com
 ```
 
-### Reward
-
-The environment provides feedback based on the customer's simulated response.
-
-Conceptually:
-
-```text
-Successful retention      → Positive reward
-Customer becomes inactive  → Negative reward
-Unnecessary incentive     → Cost / penalty
-Successful intervention   → Higher reward
+## Local Setup
+1. Clone the repository and create a virtual environment:
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+```
+2. Install dependencies:
+```powershell
+pip install -r requirements.txt
+```
+3. Apply database migrations:
+```powershell
+python manage.py migrate
 ```
 
-This allows the agent to learn a retention strategy instead of following fixed rules.
+## Running Locally
+Start the Django development server:
+```powershell
+python manage.py runserver
+```
+Visit `http://127.0.0.1:8000` to access the application.
 
----
-
-# 🔄 Reinforcement Learning Loop
-
-```text
-STATE
-  ↓
-Agent observes customer
-  ↓
-ACTION
-  ↓
-Environment simulates response
-  ↓
-REWARD
-  ↓
-New STATE
-  ↓
-Agent updates policy
-  ↓
-Repeat
+## Running Tests
+Run the comprehensive test suite (covers Auth, Models, Views, and ML Integration):
+```powershell
+python manage.py test
 ```
 
-The initial version will use a simulated environment so the complete RL learning loop can be developed and evaluated without interacting with real financial customers or transactions.
-
----
-
-# 📚 3. RAG-Based FinTech Knowledge Layer
-
-The RL agent determines **which action may be useful**.
-
-RAG provides the supporting business knowledge needed to explain and contextualize that action.
-
-The knowledge base can contain:
-
-```text
-knowledge_base/
-
-├── retention_guidelines.pdf
-├── loyalty_program.pdf
-├── customer_support_policy.pdf
-├── transaction_support.pdf
-├── reward_policy.pdf
-└── refund_policy.pdf
+## Docker Usage
+You can run the full application stack (Django + PostgreSQL) using Docker Compose:
+```powershell
+docker-compose up --build
 ```
-
-These documents are processed into searchable knowledge using embeddings and a vector database.
-
-### Example
-
-RL Agent:
-
-```text
-Recommended Action:
-PROVIDE_SUPPORT
-```
-
-RAG retrieves relevant information:
-
-```text
-Relevant Knowledge:
-Customer Support Policy
-Transaction Failure Guidelines
-Retention Guidelines
-```
-
-The system can then produce an explanation such as:
-
-```text
-Recommended Action:
-Provide Support
-
-Reason:
-The customer has increased transaction failures and
-reduced activity.
-
-Supporting Knowledge:
-Relevant support and retention guidelines were retrieved
-from the FinTech knowledge base.
-```
-
-RAG is therefore used as a **knowledge and explanation layer**, rather than pretending that the LLM itself is making the RL decision.
-
----
-
-# 🏗️ System Architecture
-
-```text
-                         ┌─────────────────────┐
-                         │   Customer Data     │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │ Behavior Processing │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Churn Risk Layer  │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Customer State    │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │    RL Environment   │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │     RL Agent        │
-                         │       DQN           │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                            Recommended Action
-                                    │
-                         ┌──────────┴──────────┐
-                         │                     │
-                         ▼                     ▼
-                 Simulated Response          RAG
-                         │                     │
-                         │             ┌───────┴────────┐
-                         │             │ FinTech Docs   │
-                         │             │ Vector Store   │
-                         │             └───────┬────────┘
-                         │                     │
-                         └──────────┬──────────┘
-                                    ▼
-                             Decision Output
-                                    │
-                                    ▼
-                              Reward Signal
-                                    │
-                                    ▼
-                              RL Learning
-```
-
----
-
-# 🛠️ Technology Stack
-
-### Machine Learning
-
-* Python
-* Pandas
-* NumPy
-* Scikit-learn
-
-### Reinforcement Learning
-
-* PyTorch
-* Gymnasium
-* Deep Q-Network (DQN)
-
-### RAG
-
-* LangChain
-* Sentence Transformers
-* FAISS / ChromaDB
-* LLM API
-
-### Backend
-
-* FastAPI
-
-### Database
-
-* PostgreSQL / SQLite
-
-### Deployment
-
-* Docker
-
----
-
-# 📁 Project Structure
-
-```text
-FinRetain-AI/
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│
-├── ml/
-│   ├── preprocessing.py
-│   ├── churn_model.py
-│   └── feature_engineering.py
-│
-├── rl/
-│   ├── environment.py
-│   ├── agent.py
-│   ├── replay_buffer.py
-│   ├── train.py
-│   └── evaluate.py
-│
-├── rag/
-│   ├── document_loader.py
-│   ├── embeddings.py
-│   ├── retriever.py
-│   └── pipeline.py
-│
-├── knowledge_base/
-│
-├── api/
-│   ├── main.py
-│   └── routes/
-│
-├── dashboard/
-│
-├── models/
-│
-├── tests/
-│
-├── requirements.txt
-├── Dockerfile
-└── README.md
-```
-
----
-
-# 📊 Example Output
-
-```text
-Customer ID: C1024
-
-Churn Risk:
-HIGH
-
-Current State:
-- Low transaction frequency
-- Declining login activity
-- Multiple failed transactions
-- Recent support interaction
-
-RL Recommendation:
-PROVIDE_SUPPORT
-
-Expected Outcome:
-Higher retention probability
-
-RAG Context:
-Transaction Support Policy
-Retention Guidelines
-
-Decision Explanation:
-Customer activity has declined while transaction
-issues have increased. The learned policy recommends
-support intervention instead of immediately offering
-a financial incentive.
-```
-
----
-
-# 📈 Evaluation
-
-The project will evaluate more than simple prediction accuracy.
-
-### Churn Layer
-
-```text
-Precision
-Recall
-F1 Score
-ROC-AUC
-Confusion Matrix
-```
-
-### RL Layer
-
-```text
-Episode Reward
-Average Reward
-Retention Rate
-Action Distribution
-Policy Performance
-```
-
-The RL agent can also be compared against simple baseline strategies such as:
-
-```text
-Random Policy
-Always No-Action
-Rule-Based Policy
-```
-
-This helps demonstrate whether the learned policy actually improves simulated retention outcomes.
-
----
-
-# 🔬 Future Improvements
-
-Possible future extensions include:
-
-* Contextual bandit baseline
-* Double DQN
-* Prioritized experience replay
-* More realistic customer simulation
-* Cost-aware retention decisions
-* Offline RL using historical interaction data
-* Model monitoring
-* Counterfactual evaluation
-* Human approval before recommended interventions
-
----
-
-# ⚠️ Responsible AI
-
-FinRetain AI is designed as a **research and educational decision-support system** using simulated FinTech interactions.
-
-It does not make real financial decisions, approve/deny financial services, or directly manipulate real customer accounts.
-
-Real-world deployment would require appropriate privacy, security, fairness, compliance, and human oversight.
-
----
-
-# 🎯 Project Goal
-
-FinRetain AI explores an important shift in applied machine learning:
-
-```text
-Prediction
-   ↓
-Decision
-   ↓
-Action
-   ↓
-Feedback
-   ↓
-Learning
-```
-
-Instead of asking only:
-
-> **"Who might churn?"**
-
-the system investigates:
-
-> **"Given what we know right now, what action should an intelligent agent take, and how can it learn from the outcome?"**
-
-That is the core idea behind **FinRetain AI**.
-
----
-
-## ⭐ Key Skills Demonstrated
-
-```text
-✓ Machine Learning
-✓ Customer Churn Analysis
-✓ Reinforcement Learning
-✓ Deep Q-Networks
-✓ Sequential Decision Making
-✓ Reward Engineering
-✓ Simulation Environments
-✓ RAG
-✓ Vector Search
-✓ Embeddings
-✓ LLM Integration
-✓ FastAPI
-✓ PyTorch
-✓ Docker
-```
+The application will be accessible at `http://localhost:8000`.
+
+## Deployment Notes
+- **Target:** Hugging Face Spaces (or similar containerized platforms).
+- **Security:** Ensure `DEBUG=False`, set a strong `SECRET_KEY`, configure `ALLOWED_HOSTS`, and set `CSRF_TRUSTED_ORIGINS` for HTTPS environments.
+- **Static Files:** The Dockerfile automatically runs `collectstatic` for production serving.
+
+## Limitations
+- **Data:** Trained on synthetic/demo data; not representative of real financial market signals.
+- **UI:** The frontend uses raw CSS without a heavy framework to remain lightweight and maintainable.
+- **ML Artifact:** The serialized `churn_pipeline.joblib` file is tracked in git as it is required for deployment inference.
+
+## Future Roadmap
+- **V2 — DQN / Reinforcement Learning:** Transitioning from static rule-based retention recommendations to a dynamic agent that learns optimal retention strategies.
+- **V3 — RAG:** Integrating a Retrieval-Augmented Generation layer to provide context-aware, knowledge-based explanations for AI decisions.

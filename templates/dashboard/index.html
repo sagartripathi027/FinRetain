@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FinRetain AI{% endblock %}
+
+{% block content %}
+    <div style="margin-bottom: 25px;">
+        <h2 style="margin: 0 0 5px 0; font-size: 1.4rem; color: #2c3e50;">Welcome back, {{ user.username }}</h2>
+        <p style="margin: 0; color: #6c757d; font-size: 0.95rem;">Customer Churn Overview</p>
+    </div>
+    
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <h3>Total Customers</h3>
+            <div class="stat-value">{{ total_customers }}</div>
+        </div>
+        <div class="stat-card" style="border-bottom: 3px solid #dc3545;">
+            <h3>High Risk</h3>
+            <div class="stat-value" style="color: #dc3545;">{{ high_risk_count }}</div>
+        </div>
+        <div class="stat-card" style="border-bottom: 3px solid #f59f00;">
+            <h3>Medium Risk</h3>
+            <div class="stat-value" style="color: #f59f00;">{{ medium_risk_count }}</div>
+        </div>
+        <div class="stat-card" style="border-bottom: 3px solid #28a745;">
+            <h3>Low Risk</h3>
+            <div class="stat-value" style="color: #28a745;">{{ low_risk_count }}</div>
+        </div>
+    </div>
+
+    <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;">
+        <div style="padding: 15px 20px; border-bottom: 1px solid #e9ecef; background-color: #f8f9fa;">
+            <h3 style="margin: 0; font-size: 1rem; color: #495057;">Recent Predictions</h3>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            {% if recent_predictions %}
+                <table style="width: 100%; border-collapse: collapse; min-width: 650px;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 2px solid #e9ecef;">
+                            <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Customer</th>
+                            <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Date</th>
+                            <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Risk Level</th>
+                            <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Churn Probability</th>
+                            <th style="padding: 12px 20px; color: #6c757d; font-size: 0.85rem; text-transform: uppercase;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in recent_predictions %}
+                        <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.1s;" onmouseover="this.style.backgroundColor='#fcfcfc'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 12px 20px;">
+                                <div style="font-weight: 500; color: #343a40;">{{ pred.customer.name }}</div>
+                                <div style="font-size: 0.85rem; color: #868e96; font-family: monospace;">{{ pred.customer.customer_id }}</div>
+                            </td>
+                            <td style="padding: 12px 20px; color: #495057; font-size: 0.9rem;">{{ pred.created_at|date:"M d, Y H:i" }}</td>
+                            <td style="padding: 12px 20px;">
+                                <span class="badge badge-{{ pred.risk_level|lower }}">{{ pred.risk_level }}</span>
+                            </td>
+                            <td style="padding: 12px 20px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="flex: 1; height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; max-width: 100px;">
+                                        <div style="height: 100%; background: {% if pred.risk_level == 'HIGH' %}#dc3545{% elif pred.risk_level == 'MEDIUM' %}#f59f00{% else %}#28a745{% endif %}; width: {% widthratio pred.churn_probability 1 100 %}%;"></div>
+                                    </div>
+                                    <span style="font-size: 0.9rem; font-weight: 500; color: #495057; min-width: 35px;">{% widthratio pred.churn_probability 1 100 %}%</span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 20px;">
+                                <a href="{% url 'customers:customer_detail' pred.customer.pk %}" style="color: #3498db; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View &rarr;</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="padding: 30px; text-align: center; color: #6c757d;">
+                    <p style="margin: 0 0 10px 0;">No predictions available yet.</p>
+                    <a href="{% url 'customers:customer_list' %}" class="btn btn-primary">Go to customers</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

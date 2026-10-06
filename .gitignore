@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+.venv/
+
+# Environment
+.env
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Logs / local output
+*.log
+train_out.txt
+test_global.txt
+
+# IDEs
+.vscode/
+.idea/
+
+# ML model artifact
+# Keep churn_pipeline.joblib because it is required for inference
