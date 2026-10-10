@@ -1,28 +1,48 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
 venv/
 .venv/
+env/
 
-# Environment
+# Environment variables
 .env
+.env.*
+!.env.example
 
 # Django
 db.sqlite3
+db.sqlite3-journal
 staticfiles/
 media/
 
-# Logs / local output
+# Logs and local output
 *.log
 train_out.txt
 test_global.txt
 
-# IDEs
+# IDEs and editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# ML model artifact
-# Keep churn_pipeline.joblib because it is required for inference
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test and coverage output
+.coverage
+htmlcov/
+
+# ML temporary/generated files
+ml/data/processed/*
+!ml/data/processed/.gitkeep
+
+# Keep the trained model required for inference
+# ml/models/churn_pipeline.joblib must remain tracked
